@@ -83,4 +83,5 @@ class Snapshot:
         pstate = data["pr_state"]
         self.process_states = [pstate[i] if pstate[i] is not None
                                else self.process_states[i] for i in range(5)]
-        self.channel_states = data["ch_state"] | self.channel_states
+        for key, value in data["ch_state"].items():
+            self.channel_states[key] = value

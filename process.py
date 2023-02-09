@@ -115,7 +115,11 @@ class Process:
         payload = {'op': 'TRANSFER', 'value': 1}
         bal_before = self.balance
         self._update_balance(-1)
+        print("start to send token")
         socket.sendall(pickle.dumps(payload))
+
+        # need modify the success definition
+
         print("Transfer: SUCCESS")
 
     ''' Close all sockets '''

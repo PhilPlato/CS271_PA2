@@ -15,7 +15,9 @@ def do_exit():
 def handle_input():
     while True:
         data = input().split()
-        if data[0] == "exit":
+        if len(data) == 0:
+            print("Invalid command. Valid inputs are 'connect', 'snapshot', 'loss', 'token', or 'exit'.")
+        elif data[0] == "exit":
             do_exit()
         elif data[0] == "connect":
             connect_outgoing(PROC)

@@ -53,7 +53,8 @@ class Snapshot:
     def close_channel_state(self, src, dest):
         if (src, dest) not in self.channel_states:
             self.channel_states[src, dest] = []
-        self.open_channels.remove(src)
+        if src in self.open_channels:
+            self.open_channels.remove(src)
 
     ''' Returns true if snapshot is ready to sent to requester 入边收到了所有的Marker'''
 

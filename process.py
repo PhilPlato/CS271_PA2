@@ -46,7 +46,6 @@ class Process:
             try:
                 data = pickle.loads(sock.recv(1024))
                 time.sleep(DELAY)
-                self._update_llc()
                 if data['op'] == 'MARKER':
                     id = data['id']
                     self.log.info(f"Received MARKER for Snapshot {(id[0], processes[id[1]])}")
@@ -88,8 +87,9 @@ class Process:
 
     def _send_markers(self, snapshot_id):
         payload = {'op': 'MARKER', 'id': snapshot_id}
-        for sock in self.outgoing:
+        for index, sock in enumerate(self.outgoing):
             if sock is not None:
+                self.log.info(f"Client {processes[self.pid]} send marker to Client {processes[index]}")
                 sock.sendall(pickle.dumps(payload))
 
     ''' Updates process balance'''

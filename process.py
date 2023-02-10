@@ -5,6 +5,7 @@ from utility import *
 
 DELAY = 3
 TOKEN_PASS = 1
+LOSS_RATE = 0.3
 
 '''每个client拥有一个process'''
 ''' Implement snapshot protocol for a single process '''
@@ -60,7 +61,7 @@ class Process:
                         self.recorder.update_channels(index, self.pid, data, marker=True)
                         self._send_markers(id)
                 elif data['op'] == "TRANSFER":
-                    if self.loss == False or (self.loss == True and (random.random() < 0.9)):
+                    if self.loss == False or (self.loss == True and (random.random() < LOSS_RATE)):
                         value = data['value']
                         self._update_balance(value)
                         self.recorder.update_channels(index, self.pid, value)

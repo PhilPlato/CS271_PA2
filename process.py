@@ -61,7 +61,7 @@ class Process:
                         self.recorder.update_channels(index, self.pid, data, marker=True)
                         self._send_markers(id)
                 elif data['op'] == "TRANSFER":
-                    if self.loss == False or (self.loss == True and (random.random() < LOSS_RATE)):
+                    if self.loss == False or (self.loss == True and (random.random() < (1 - LOSS_RATE))):
                         value = data['value']
                         self._update_balance(value)
                         self.recorder.update_channels(index, self.pid, value)

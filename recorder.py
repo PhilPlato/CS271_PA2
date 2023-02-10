@@ -7,7 +7,7 @@ from snapshot import *
 
 DELAY = 3
 
-
+'''snapshots数组中为 (llc, pid): Snapshot Object'''
 class Recorder:
     def __init__(self, pid):
         self.pid = pid
@@ -37,8 +37,9 @@ class Recorder:
         self.sockets[index] = None
 
     '''
-    Checks for snapshot ready state and sends or prints 
-    snapshot if ready.
+    Checks for snapshot ready state and sends or prints snapshot if ready.
+    if 是自己发起的snapshot 则可以打印并结束了
+    elif 是别人发起的snapshot 要传回去
     '''
 
     def _check_ready_state(self, snapshot_id):

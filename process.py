@@ -6,7 +6,7 @@ from utility import *
 DELAY = 3
 TOKEN_PASS = 1
 
-'''感觉这是就每一个process, 每个client拥有一个process'''
+'''每个client拥有一个process'''
 ''' Implement snapshot protocol for a single process '''
 
 
@@ -25,7 +25,19 @@ class Process:
         self.log = LogUtilities()
         self.mutex = threading.Lock()
 
-    ''' Thread for handling messages on incoming sockets  '''
+    ''' Thread for handling messages on incoming sockets
+     这里的socket是accept以后那个新的socket index是起点的pid 终点自然是Process所在的client
+     DAG网络
+     在DAG网络上可能会收到什么消息
+     1.TRANSFER 把Token 从一个client 传到另一个client 传输消息格式{ 'op' : 'TRANSFER', 'value' : 1 }
+     2. { 'op' : 'MARKER', 'id' : snapshot_id }
+         snapshot = self.recorder.create_snapshot(
+      (self.llc, self.pid), self.pid, self.balance)
+
+      create_snapshot(self, snapshot_id, pid, balance)
+
+      也即 snapshot_id 为（llc, pid）
+     '''
 
     def handle_incoming(self, sock, index):
         self.incoming[index] = sock
@@ -44,15 +56,15 @@ class Process:
                     else:
                         self.log.info(f"First MARKER: Recording Channel {processes[index]} -> {processes[self.pid]}")
                         self.recorder.create_snapshot(id, self.pid, self.balance)
-                        self.recorder.update_channels(index, self.pid, data, marker=True)
                         self.recorder.close_channel(id, index)
+                        self.recorder.update_channels(index, self.pid, data, marker=True)
                         self._send_markers(id)
                 elif data['op'] == "TRANSFER":
                     if self.loss == False or (self.loss == True and (random.random() < 0.9)):
                         value = data['value']
                         self._update_balance(value)
                         self.recorder.update_channels(index, self.pid, value)
-                        print(f"Transfer: RECEIVED TOKEN FROM CLIENT {processes[index]}")
+                        self.log.info(f"Transfer: RECEIVED TOKEN FROM CLIENT {processes[index]}")
                         self.transfer_token()
             except EOFError:
                 self.log.error(f"Disconnected from Client {processes[index]}")
@@ -113,14 +125,9 @@ class Process:
             print("Transfer: NOT CONNECTED TO CLIENT")
             return
         payload = {'op': 'TRANSFER', 'value': 1}
-        bal_before = self.balance
         self._update_balance(-1)
-        print("start to send token")
         socket.sendall(pickle.dumps(payload))
-
-        # need modify the success definition
-
-        print("Transfer: SUCCESS")
+        self.log.info(f"Transfer sent to Client {processes[random_element]}")
 
     ''' Close all sockets '''
 

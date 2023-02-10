@@ -1,7 +1,8 @@
 from logutilities import LogUtilities
 from utility import *
 
-''' Object representing a snapshot for a single request 对每一个snapshot拥有一个Snapshot'''
+''' Object representing a snapshot for a single request 对每一个snapshot,每一个节点拥有一个Snapshot Object
+channel_states 的数据结构 （src, dest）: [传输了多少token]'''
 
 
 class Snapshot:
@@ -13,7 +14,7 @@ class Snapshot:
         # 存储入边
         self.open_channels = Network.incoming(host_id).copy()
 
-    ''' Updates process state with current balance 更新现在的balance是多少'''
+    ''' Updates process state with current balance 记录本地状态在create_snapshot的时候就进行'''
 
     def update_process_state(self, pid, value):
         self.process_states[pid] = value
@@ -24,25 +25,28 @@ class Snapshot:
     def print(self):
         print("---------------")
         print(f"Local States:\
-        \n\tA: ${self.process_states[A]}\
-        \n\tB: ${self.process_states[B]}\
-        \n\tC: ${self.process_states[C]}\
-        \n\tD: ${self.process_states[D]}\n"
+        \n\tA: {self.process_states[A]}\
+        \n\tB: {self.process_states[B]}\
+        \n\tC: {self.process_states[C]}\
+        \n\tD: {self.process_states[D]}\n"
               )
         print("Channel States")
         for src, dest in self.channel_states:
             print(f"\t{processes[src]} -> {processes[dest]}: {self.channel_states[src, dest]}")
         print("---------------")
 
-    ''' Updates channel state with incoming messages '''
+    '''Updates channel state with incoming messages 在建立好节点上的snapshot对象后要开始记录入边上的channel_state直到某通道收到MARKER就要关闭CHANNEL'''
 
     def update_channel_state(self, src, dest, value, marker=False):
         if (src, dest) not in self.channel_states:
             self.channel_states[src, dest] = []
-        if marker and value['id'] == self.id:
+        if src in self.open_channels:
+            if marker and value['id'] == self.id:
+                return
+            # python中数组可以直接相加起到拼接的作用。
+            self.channel_states[src, dest] += [value]
+        else:
             return
-        # python中数组可以直接相加起到拼接的作用。
-        self.channel_states[src, dest] += [value]
 
     ''' Stops recording messages for channel open_channels是监听所有入边 如果某个边收到Marker了就remove 掉'''
 
@@ -83,5 +87,4 @@ class Snapshot:
         pstate = data["pr_state"]
         self.process_states = [pstate[i] if pstate[i] is not None
                                else self.process_states[i] for i in range(5)]
-        for key, value in data["ch_state"].items():
-            self.channel_states[key] = value
+        self.channel_states.update(data["ch_state"])

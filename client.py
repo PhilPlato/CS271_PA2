@@ -22,7 +22,7 @@ def handle_input():
         elif data[0] == "connect":
             connect_outgoing(PROC)
         elif data[0] == "snapshot":
-            print('Initiating Global Snapshot Protocol...')
+            Log.info('Initiating Global Snapshot Protocol...')
             PROC.initiate_snapshot()
         elif data[0] == "loss":
             PROC.loss = True
@@ -33,12 +33,13 @@ def handle_input():
 
 
 if __name__ == "__main__":
+    # 两个参数 第一个 client.py 第二个是哪个client
     if len(sys.argv) != 2:
         print(f'Usage: python {sys.argv[0]} <processId>')
         sys.exit()
 
     Log = LogUtilities()
-
+    # 获取本client的pid
     PID = processes[sys.argv[1]]
     PROC = Process(PID)
 

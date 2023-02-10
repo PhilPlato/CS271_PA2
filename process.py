@@ -65,7 +65,7 @@ class Process:
                         self._update_balance(value)
                         self.recorder.update_channels(index, self.pid, value)
                         self.log.info(f"Transfer: RECEIVED TOKEN FROM CLIENT {processes[index]}")
-                        self.transfer_token()
+                        threading.Thread(target=self.transfer_token()).start()
             except EOFError:
                 self.log.error(f"Disconnected from Client {processes[index]}")
                 sock.close()
@@ -78,12 +78,9 @@ class Process:
 
     ''' Updates Lamport Logical Clock Counter '''
 
-    def _update_llc(self, value=None):
+    def _update_llc(self):
         self.mutex.acquire()
-        if (value):
-            self.llc = max(value, self.llc) + 1
-        else:
-            self.llc += 1
+        self.llc += 1
         self.mutex.release()
 
     ''' Sends markers to all outgoing connections'''
@@ -111,6 +108,7 @@ class Process:
     def initiate_snapshot(self):
         snapshot = self.recorder.create_snapshot(
             (self.llc, self.pid), self.pid, self.balance)
+        self._update_llc()
         self._send_markers(snapshot.id)
 
     def get_token(self):
